@@ -1,6 +1,8 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Button, FlatList, Modal, TouchableOpacity, StyleSheet, Alert, TextInput } from 'react-native';
+import api from '../api/api';
+import GlobalStateContext from '../contextGlobal/GlobalStateContext';
 
 // Lista expandida de médicos com datas e horários de disponibilidade simulados
 
@@ -17,16 +19,13 @@ const AppointmentScreen = ({ navigation }) => {
   const [hourSelected, setHourSelectted] = useState(false)
 
   const [passed, setPassed] = useState(false)
-
-  const scheduleAppointment = () => {
-    console.log('Agendamento:', selectedDoctor, selectedDate, selectedTime);
-  };
+  const [passedDate, setPassedDate] = useState(false)
 
 
-  const handleSelectDoctor = (item) => {
-    setSelectedDoctor(item)
-  }
 
+  const {
+    userData
+  } = useContext(GlobalStateContext);
 
   const formatarData = (input) => {
     // Lógica para adicionar a máscara de data (DD/MM/YYYY)
@@ -61,7 +60,7 @@ const AppointmentScreen = ({ navigation }) => {
 
   const handleInputChangeHour = (input) => {
     const hourFormatada = formatarHorario(input.replace(/[^0-9]/g, ''));
-    setHourSelectted(hourFormatada);
+    setSelectedTime(hourFormatada);
   
     // Extrair hora e minuto do horário formatado
     const [hora, minuto] = hourFormatada.split(':');
@@ -92,9 +91,24 @@ const AppointmentScreen = ({ navigation }) => {
   };
 
 
+  const handleAgendar = () => {
+    api.post('/consultas/agendar',{
+      medicoId: selectedDoctor.id,
+      usuarioId: userData.id,
+      dataHora: `${selectedDate} ${selectedTime}`
+    })
+    .then((res) => {
+      console.log(res.data)
+      // navigation.navigate('MyAppointments')
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+  }
+
   useEffect(() => {
-    console.log(selectedDate)
-  }, [selectedDate])
+    console.log(selectedDoctor)
+  }, [selectedDoctor])
 
 
   useEffect(() => {
@@ -165,9 +179,9 @@ const AppointmentScreen = ({ navigation }) => {
                 style={styles.input}
                 placeholder="Selecionar Horario"
                 onChangeText={handleInputChangeHour}
-                value={hourSelected}
+                value={selectedTime}
               />
-              <TouchableOpacity onPress={ passed ? () => navigation.navigate('MyAppointments') : null} style={{ height:40, padding: 10, marginBottom: "60%", backgroundColor: passed ? '#19c37d' : '#c4c4c4'}}>
+              <TouchableOpacity onPress={ passed ? () => handleAgendar() : null} style={{ height:40, padding: 10, marginBottom: "60%", backgroundColor: passed ? '#19c37d' : '#c4c4c4'}}>
                 <Text style={{ color: "white" }}>Marcar consulta</Text>
               </TouchableOpacity>
 

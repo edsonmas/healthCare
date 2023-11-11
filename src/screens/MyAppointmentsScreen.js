@@ -16,14 +16,20 @@ const MyAppointmentsScreen = ({ navigation }) => {
   const [userAppointments, setUserAppointments] = useState(null);
 
   useEffect(() => {
-    api.get(`/consultas/usuario/${userData.id}`)
+
+    if(userData){
+      api.get(`/consultas/usuario/${userData.id}`)
       .then((res) => {
         console.log(res.data)
-        setUserAppointments(res.data)
+        setUserAppointments(res?.data)
       })
       .catch((err) => {
         console.log(err)
       })
+    } else {
+
+    }
+
   }, [userData])
 
   const cancelAppointment = (id) => {
@@ -37,8 +43,8 @@ const MyAppointmentsScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Minhas Consultas</Text>
       <FlatList
-        data={userAppointments === null ? [] : userAppointments}
-        keyExtractor={(item) => item.id.toString()}
+        data={userAppointments ? userAppointments : null}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const dataHoraString = item?.dataHora;
           const dataHora = new Date(dataHoraString);
