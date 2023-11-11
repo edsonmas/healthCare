@@ -1,16 +1,37 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import api from '../api/api';
+import { Picker } from '@react-native-picker/picker';
 
-const RegisterUserScreen = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [contact, setContact] = useState('');
-  const [medicalHistory, setMedicalHistory] = useState('');
+const RegisterUserScreen = ({ navigation }) => {
+
+  const [userData, setUserData] = useState({
+    email: '',
+    senha: '',
+    nome: '',
+    dataNascimento: '',
+    contatos: '',
+    genero: 'Masculino',
+    endereco: '',
+    historicoMedico: '',
+  });
 
   const handleRegister = () => {
-    // Implemente a lógica de registro aqui, por exemplo, faça uma solicitação ao servidor.
+    api.post("/usuarios/registrar", userData)
+      .then((res) => {
+        console.log(res)
+        navigation.navigate('Login');
+        Alert.alert("cadastrado com sucesso")
+        setTimeout(() => {
+          navigation.navigate('Login')
+        }, 2000);
+      })
+      .catch((err) => {
+        console.log(err)
+        Alert.alert("Deu erro ao cadastrar")
+      })
   };
+
 
   return (
     <View style={styles.container}>
@@ -18,33 +39,50 @@ const RegisterUserScreen = () => {
       <TextInput
         style={styles.input}
         placeholder="Nome"
-        value={name}
-        onChangeText={setName}
+        value={userData.nome}
+        onChangeText={(itemValue) => setUserData({...userData, nome: itemValue})}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
+        value={userData.email}
+        onChangeText={(itemValue) => setUserData({...userData, email: itemValue})}
       />
       <TextInput
         style={styles.input}
         placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
+        value={userData.senha}
+        onChangeText={(itemValue) => setUserData({...userData, senha: itemValue})}
         secureTextEntry
       />
       <TextInput
         style={styles.input}
+        placeholder="Data de nascimento"
+        value={userData.dataNascimento}
+        onChangeText={(itemValue) => setUserData({...userData, dataNascimento: itemValue})}
+      />
+      <View  style={styles.input}>
+      <Picker
+        selectedValue={userData.genero}
+        style={styles.picker}
+        onValueChange={(itemValue) => setUserData({ ...userData, genero: itemValue })}
+      >
+        <Picker.Item label="Masculino" value="Masculino" />
+        <Picker.Item label="Feminino" value="Feminino" />
+        <Picker.Item label="Outro" value="Outro" />
+      </Picker>
+      </View>
+      <TextInput
+        style={styles.input}
         placeholder="Contato"
-        value={contact}
-        onChangeText={setContact}
+        value={userData.contatos}
+        onChangeText={(itemValue) => setUserData({...userData, contatos: itemValue})}
       />
       <TextInput
         style={styles.input}
         placeholder="Histórico Médico"
-        value={medicalHistory}
-        onChangeText={setMedicalHistory}
+        value={userData.historicoMedico}
+        onChangeText={(itemValue) => setUserData({...userData, historicoMedico: itemValue})}
         multiline
       />
       <Button title="Registrar" onPress={handleRegister} />
@@ -66,6 +104,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     borderColor: 'gray',
+    justifyContent: "center",
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 8,

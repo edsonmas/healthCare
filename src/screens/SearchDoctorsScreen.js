@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, FlatList } from 'react-native';
 
 const SearchDoctorsScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+
 
   const doctors = [
     {
@@ -25,6 +25,12 @@ const SearchDoctorsScreen = () => {
       profile: 'Ortopedista com experiência no tratamento de lesões e fraturas.',
     },
     {
+      id: 6,
+      name: 'Dr. Pedro Almeida',
+      specialty: 'Ortopedia',
+      profile: 'Ortopedista com experiência no tratamento de lesões e fraturas.',
+    },
+    {
       id: 4,
       name: 'Dra. Ana Pereira',
       specialty: 'Ginecologia',
@@ -37,6 +43,8 @@ const SearchDoctorsScreen = () => {
       profile: 'Pediatra com vasta experiência em cuidados de saúde infantil.',
     },
   ];
+
+  const [searchResults, setSearchResults] = useState(doctors);
 
   const handleSearch = () => {
     // Realizar a busca com base no searchTerm

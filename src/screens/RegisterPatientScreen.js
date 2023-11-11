@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Importe Picker desta forma
 import axios from 'axios';
 
+
 const RegisterPatientScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({
     nomeUsuario: '',
@@ -95,6 +96,7 @@ const RegisterPatientScreen = ({ navigation }) => {
         placeholder="Histórico Médico"
         onChangeText={(text) => setUserData({ ...userData, historicoMedico: text })}
       />
+      {/* <Button title="Registrar" onPress={handleRegister} /> */}
       <Button title="Registrar" onPress={handleRegister} />
     </View>
   );
