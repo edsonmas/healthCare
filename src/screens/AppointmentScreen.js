@@ -1,41 +1,22 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, Modal, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, FlatList, Modal, TouchableOpacity, StyleSheet, Alert, TextInput } from 'react-native';
 
 // Lista expandida de médicos com datas e horários de disponibilidade simulados
-const doctorsData = [
-  {
-    nome: 'Dr. João',
-    especialidade: 'Médico especializado em cardiologia com vasta experiência.',
-    perfil: 'Cardiologia',
-    disponibilidade: [
-      { data: '2023-10-15', horario: '08:00' },
-      { data: '2023-10-15', horario: '14:00' },
-      { data: '2023-10-20', horario: '10:30' },
-      { data: '2023-10-25', horario: '15:00' },
-    ],
-  },
-  {
-    nome: 'Dra. Maria',
-    especialidade: 'Ortopedista com foco em tratamento de lesões esportivas.',
-    perfil: 'Ortopedia',
-    disponibilidade: [
-      { data: '2023-10-16', horario: '09:30' },
-      { data: '2023-10-20', horario: '14:30' },
-      { data: '2023-10-25', horario: '11:00' },
-      { data: '2023-10-30', horario: '13:30' },
-    ],
-  },
-];
 
 const currentDate = '2023-10-15'; // Data atual para simulação
 
-const AppointmentScreen = ({navigation}) => {
-  const [doctors, setDoctors] = useState(doctorsData);
+const AppointmentScreen = ({ navigation }) => {
+  const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [dataSelected, setDataSelectted] = useState(false)
+  const [hourSelected, setHourSelectted] = useState(false)
+
+  const [passed, setPassed] = useState(false)
 
   const scheduleAppointment = () => {
     console.log('Agendamento:', selectedDoctor, selectedDate, selectedTime);
@@ -47,20 +28,84 @@ const AppointmentScreen = ({navigation}) => {
   }
 
 
+  const formatarData = (input) => {
+    // Lógica para adicionar a máscara de data (DD/MM/YYYY)
+    if (input.length <= 2) {
+      return input.replace(/[^0-9]/g, '');
+    }
+    if (input.length <= 4) {
+      return `${input.slice(0, 2)}/${input.slice(2)}`;
+    }
+    return `${input.slice(0, 2)}/${input.slice(2, 4)}/${input.slice(4, 8)}`;
+  };
+
+
+  const formatarHorario = (input) => {
+    // Lógica para adicionar a máscara de horário (HH:mm)
+    if (input.length <= 2) {
+      // Garante que apenas dígitos são mantidos
+      return input.replace(/[^0-9]/g, '');
+    }
+    if (input.length <= 4) {
+      // Formata como "HH:mm"
+      return `${input.slice(0, 2)}:${input.slice(2)}`;
+    }
+    // Pode adicionar mais lógica se necessário, dependendo do formato desejado
+    return `${input.slice(0, 2)}:${input.slice(2, 4)}`;
+  };
+
+  const handleInputChange = (input) => {
+    const dataFormatada = formatarData(input.replace(/[^0-9]/g, ''));
+    setSelectedDate(dataFormatada);
+  };
+
+  const handleInputChangeHour = (input) => {
+    const hourFormatada = formatarHorario(input.replace(/[^0-9]/g, ''));
+    setHourSelectted(hourFormatada);
+  
+    // Extrair hora e minuto do horário formatado
+    const [hora, minuto] = hourFormatada.split(':');
+  
+    // Verificar se o horário está indisponível
+    const isHorarioIndisponivel = doctors.some((doctor) =>
+      doctor.indisponibilidades.some(
+        (indisponibilidade) => {
+          // Extrair hora e minuto da indisponibilidade
+          const [horaIndisponivel, minutoIndisponivel] =
+            indisponibilidade.horario.split(':');
+          
+          // Comparar apenas hora e minuto
+          return hora === horaIndisponivel && minuto === minutoIndisponivel;
+        }
+      )
+    );
+  
+    // Lógica específica para horários indisponíveis ou disponíveis
+    if (isHorarioIndisponivel) {
+      console.log('Horário indisponível');
+      setPassed(false)
+      // Adicione a lógica que você deseja executar quando o horário estiver indisponível
+    } else {
+      console.log('Horário disponível');
+      setPassed(true)
+    }
+  };
+
+
   useEffect(() => {
     console.log(selectedDate)
   }, [selectedDate])
 
 
   useEffect(() => {
-    axios.get('https://2da9-2804-774-8101-a81b-7d12-c81c-a952-361c.ngrok.io/medicos/lista')
-    .then((res) => {
-      console.log(res.data)
-      setDoctors(res.data)
-    })
-    .catch((err) => {
-      console.log(err)
-    })
+    axios.get('https://b3c7-2804-774-8101-a81b-7d12-c81c-a952-361c.ngrok.io/medicos/indisponibilidades')
+      .then((res) => {
+        console.log("datas indis", res.data)
+        setDoctors(res.data)
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   }, [])
 
   return (
@@ -84,7 +129,7 @@ const AppointmentScreen = ({navigation}) => {
               <View style={{ backgroundColor: selectedDoctor?.nome === item.nome ? '#c4c4c4' : null }}>
                 <TouchableOpacity onPress={() => setSelectedDoctor(item)} style={styles.doctorItem}>
                   <Text style={styles.doctorName}>{item.nome}</Text>
-                  <Text style={styles.doctorSpecialty}>{item.especialidade}</Text>
+                  <Text style={styles.doctorSpecialty}>{item.perfil}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -98,41 +143,34 @@ const AppointmentScreen = ({navigation}) => {
           <Text style={styles.selectedDoctorText}>Médico Selecionado:</Text>
           <Text style={styles.selectedDoctorName}>{selectedDoctor.nome}</Text>
           <Text style={styles.selectedDoctorText}>Escolha uma data: {selectedDate ? selectedDate : ""}</Text>
-          <FlatList
-            data={selectedDoctor.disponibilidade}
-            keyExtractor={(item) => item.data + item.horario}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.dateItem}
-                onPress={() => setSelectedDate(item.data)}
-                disabled={currentDate > item.data}
-              >
-                <Text style={styles.dateText}>{item.data}  </Text>
-                {/* <Text style={styles.dateText}>{item.horario}</Text> */}
-              </TouchableOpacity>
-            )}
+          <TextInput
+            style={styles.input}
+            placeholder="Selecionar Data"
+            onChangeText={handleInputChange}
+            value={selectedDate}
           />
-          {selectedDate && (
+          {dataSelected === false ?
+
+            <TouchableOpacity onPress={() => setDataSelectted(selectedDate === null ? false : true)} style={styles.button}>
+              <Text style={{ color: "white" }}>Continuar</Text>
+            </TouchableOpacity> :
+            null
+
+          }
+
+          {dataSelected && (
             <View >
               <Text style={styles.selectedDoctorText}>Escolha um horário:{selectedTime ? selectedTime : ""}</Text>
-              <FlatList
-                data={selectedDoctor.disponibilidade.filter((item) => item.data === selectedDate)}
-                keyExtractor={(item) => item.horario}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={selectedTime === item.horario ? styles.selectedTime : styles.timeItem}
-                    onPress={() => setSelectedTime(item.horario)}
-                  >
-                    <Text style={styles.timeText}>{item.horario}</Text>
-                  </TouchableOpacity>
-                )}
+              <TextInput
+                style={styles.input}
+                placeholder="Selecionar Horario"
+                onChangeText={handleInputChangeHour}
+                value={hourSelected}
               />
-              <TouchableOpacity onPress={() => navigation.navigate('MyAppointments')} style={styles.button}>
+              <TouchableOpacity onPress={ passed ? () => navigation.navigate('MyAppointments') : null} style={{ height:40, padding: 10, marginBottom: "60%", backgroundColor: passed ? '#19c37d' : '#c4c4c4'}}>
                 <Text style={{ color: "white" }}>Marcar consulta</Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity onPress={() => Alert.alert("cadastrado com sucesso")} style={styles.button}>
-                <Text style={{ color: "white" }}>Marcar consulta</Text>
-              </TouchableOpacity> */}
+
             </View>
           )}
         </View>
@@ -224,6 +262,13 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#19c37d',
     marginBottom: "60%"
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 8,
   },
 });
 

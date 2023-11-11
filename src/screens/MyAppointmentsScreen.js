@@ -13,9 +13,7 @@ const MyAppointmentsScreen = ({ navigation }) => {
   } = useContext(GlobalStateContext);
 
 
-  const [userAppointments, setUserAppointments] = useState([
-
-  ]);
+  const [userAppointments, setUserAppointments] = useState(null);
 
   useEffect(() => {
     api.get(`/consultas/usuario/${userData.id}`)
@@ -26,7 +24,7 @@ const MyAppointmentsScreen = ({ navigation }) => {
       .catch((err) => {
         console.log(err)
       })
-  }, [])
+  }, [userData])
 
   const cancelAppointment = (id) => {
     // Filter out the appointment with the specified id
@@ -39,24 +37,24 @@ const MyAppointmentsScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Minhas Consultas</Text>
       <FlatList
-        data={userAppointments}
+        data={userAppointments === null ? [] : userAppointments}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const dataHoraString = item.dataHora;
+          const dataHoraString = item?.dataHora;
           const dataHora = new Date(dataHoraString);
 
-          const data = dataHora.toISOString().split('T')[0];
+          const data = dataHora?.toISOString().split('T')[0];
 
-          const hora = dataHora.toISOString().split('T')[1].split('.')[0];
+          const hora = dataHora?.toISOString().split('T')[1].split('.')[0];
 
 
           return (
             <View style={styles.appointmentItem}>
-              <Text style={styles.doctorName}>{item.medico.nome}</Text>
+              <Text style={styles.doctorName}>{item?.medico?.nome}</Text>
               <Text style={styles.appointmentDetails}>
-                {data}, {hora}
+                {data ? data : null}, {hora ? hora: null}
               </Text>
-              <Text style={styles.appointmentDetails}>{item.medico.especialidade}</Text>
+              <Text style={styles.appointmentDetails}>{item?.medico?.especialidade}</Text>
               <TouchableOpacity onPress={() => cancelAppointment(item.id)} style={styles.buttonCancel}>
                 <Text style={{ color: "white" }}>Cancelar consulta</Text>
               </TouchableOpacity>
